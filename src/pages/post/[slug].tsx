@@ -2,6 +2,7 @@ import { format } from 'date-fns';
 import ptBR from 'date-fns/locale/pt-BR';
 import { GetStaticPaths, GetStaticProps } from 'next';
 import Head from 'next/head';
+import { useRouter } from 'next/router';
 import { RichText } from 'prismic-dom';
 import { FiCalendar, FiClock, FiUser } from 'react-icons/fi';
 
@@ -32,6 +33,12 @@ interface PostProps {
 }
 
 export default function Post({ post }: PostProps) {
+  const router = useRouter()
+
+  if(router.isFallback) {
+    return <div className={styles.post}>Carregando...</div>
+  }
+
   const readingTime = post.data.content.reduce((count, section) => {
     const heading = section.heading.split(' ').length;
     const text = section.body
@@ -55,7 +62,8 @@ export default function Post({ post }: PostProps) {
           <h1>{post.data.title}</h1>
           <div className={styles.info}>
             <time>
-              <FiCalendar /> {post.first_publication_date}
+              <FiCalendar /> 
+              {format(new Date(post.first_publication_date), 'PP', {locale: ptBR})}
             </time>
             <span>
               <FiUser />
@@ -85,11 +93,18 @@ export default function Post({ post }: PostProps) {
 }
 
 export const getStaticPaths: GetStaticPaths = async () => {
-  // const prismic = getPrismicClient({});
-  // const posts = await prismic.getByType(TODO);
+  const prismic = getPrismicClient({});
+  const posts = await prismic.getByType('posts');
+
+  const paths = posts.results.map((post) => ({
+    params: {
+      slug: post.uid
+    }
+  })) //generate static file on build for all posts just for this example
+
   return {
-    paths: [],
-    fallback: 'blocking',
+    paths,
+    fallback: true,
   };
 };
 
@@ -100,19 +115,15 @@ export const getStaticProps: GetStaticProps = async ({ params }) => {
   const response = await prismic.getByUID('posts', String(slug), {});
 
   const post = {
-    first_publication_date: format(
-      new Date(response.first_publication_date),
-      'PP',
-      {
-        locale: ptBR,
-      }
-    ),
+    uid: response.uid,
+    first_publication_date: response.first_publication_date,
     data: {
-      title: RichText.asText(response.data.title),
+      title: response.data.title,
       banner: {
         url: response.data.banner.url,
       },
       author: response.data.author,
+      subtitle: response.data.subtitle,
       content: response.data.content,
     },
   };

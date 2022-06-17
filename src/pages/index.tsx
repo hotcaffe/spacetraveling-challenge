@@ -70,12 +70,12 @@ export default function Home({postsPagination}: HomeProps) {
           return (
             <div key={post.uid} className={styles.post}>
               <Link href={`post/${post.uid}`}>
-                <h3>{RichText.asText(post.data.title)}</h3>
+                <h3>{post.data.title}</h3>
               </Link>
               <span>{post.data.subtitle}</span>
               <div className={styles.info}>
                 <time>
-                  <FiCalendar/> {post.first_publication_date}
+                  <FiCalendar/> {format(new Date(post.first_publication_date), 'PP', {locale: ptBR})}
                 </time>
                 <span>
                   <FiUser/> {post.data.author}
@@ -99,9 +99,7 @@ export const getStaticProps: GetStaticProps = async ({params}) => {
   const posts = postsResponse.results.map(post => {
     return ({
       uid: post.uid,
-      first_publication_date: format(new Date(post.first_publication_date), 'PP', {
-        locale: ptBR
-      }),
+      first_publication_date: post.first_publication_date,
       data: {
         title: post.data.title,
         subtitle: post.data.subtitle,
