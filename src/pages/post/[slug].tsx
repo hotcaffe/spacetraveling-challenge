@@ -1,6 +1,7 @@
 import { format } from 'date-fns';
 import ptBR from 'date-fns/locale/pt-BR';
 import { GetStaticPaths, GetStaticProps } from 'next';
+import Head from 'next/head';
 import { RichText } from 'prismic-dom';
 import { FiCalendar, FiClock, FiUser } from 'react-icons/fi';
 
@@ -44,36 +45,41 @@ export default function Post({ post }: PostProps) {
   }, 0);
 
   return (
-    <div className={styles.post}>
-      <img src={post.data.banner.url} alt="post banner" />
-      <article className={styles.content}>
-        <h1>{post.data.title}</h1>
-        <div className={styles.info}>
-          <time>
-            <FiCalendar /> {post.first_publication_date}
-          </time>
-          <span>
-            <FiUser />
-            {post.data.author}
-          </span>
-          <span>
-            <FiClock />
-            {Math.ceil(readingTime / 200)} min
-          </span>
-        </div>
-        {post.data.content.map(section => {
-          return (
-            <div>
-              <h2>{section.heading}</h2>
-              <div
-                dangerouslySetInnerHTML={{
-                  __html: RichText.asHtml(section.body),
-                }}
-              ></div>
-            </div>
-          );
-        })}
-      </article>
+    <div className={commonStyles.common}>
+      <Head>
+        <title>{post.data.title} | spacetraveling</title>
+      </Head>
+      <div className={styles.post}>
+        <img src={post.data.banner.url} alt="post banner" />
+        <main className={styles.content}>
+          <h1>{post.data.title}</h1>
+          <div className={styles.info}>
+            <time>
+              <FiCalendar /> {post.first_publication_date}
+            </time>
+            <span>
+              <FiUser />
+              {post.data.author}
+            </span>
+            <span>
+              <FiClock />
+              {Math.ceil(readingTime / 200)} min
+            </span>
+          </div>
+          {post.data.content.map(section => {
+            return (
+              <article key="section.heading">
+                <h2>{section.heading}</h2>
+                <div
+                  dangerouslySetInnerHTML={{
+                    __html: RichText.asHtml(section.body),
+                  }}
+                ></div>
+              </article>
+            );
+          })}
+        </main>
+      </div>
     </div>
   );
 }

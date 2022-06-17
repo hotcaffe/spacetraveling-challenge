@@ -1,5 +1,10 @@
+import { format } from 'date-fns';
+import ptBR from 'date-fns/locale/pt-BR/index.js';
 import { GetStaticProps } from 'next';
 import Head from 'next/head';
+import Link from 'next/link';
+import { RichText } from 'prismic-dom';
+import { FiCalendar, FiUser } from 'react-icons/fi';
 import Header from '../components/Header';
 
 import { getPrismicClient } from '../services/prismic';
@@ -26,21 +31,66 @@ interface HomeProps {
   postsPagination: PostPagination;
 }
 
-export default function Home() {
+export default function Home({postsPagination}: HomeProps) {
   return (
-    <>
+    <div className={commonStyles.common}>
       <Head>
         <title>Home | spacetraveling</title>
       </Head>
-      <main>
+      <main className={styles.content}>
+        {postsPagination.results.map(post => {
+          return (
+            <div key={post.uid} className={styles.post}>
+              <Link href={`post/${post.uid}`}>
+                <h3>{RichText.asText(post.data.title)}</h3>
+              </Link>
+              <span>{post.data.subtitle}</span>
+              <div className={styles.info}>
+                <time>
+                  <FiCalendar/> {post.first_publication_date}
+                </time>
+                <span>
+                  <FiUser/> {post.data.author}
+                </span>
+              </div>
+            </div>
+          )
+        })}
+        {postsPagination.next_page ? <a href="">Carregar mais posts</a> : ''}
       </main>
-    </>
+    </div>
   )
 }
 
-// export const getStaticProps = async () => {
-//   // const prismic = getPrismicClient({});
-//   // const postsResponse = await prismic.getByType(TODO);
+export const getStaticProps: GetStaticProps = async ({params}) => {
+  const prismic = getPrismicClient({});
+  const postsResponse = await prismic.getByType('posts', {
+    pageSize: 5
+  });
 
-//   // TODO
-// };
+  const posts = postsResponse.results.map(post => {
+    return ({
+      uid: post.uid,
+      first_publication_date: format(new Date(post.first_publication_date), 'PP', {
+        locale: ptBR
+      }),
+      data: {
+        title: post.data.title,
+        subtitle: post.data.subtitle,
+        author: post.data.author
+      }
+    })
+  })
+
+  const postsPagination = {
+    next_page: postsResponse.next_page,
+    results: posts 
+  }
+
+  return {
+    props: {
+      postsPagination
+    },
+    revalidate: 60 * 60 //1 hour
+  }
+};
