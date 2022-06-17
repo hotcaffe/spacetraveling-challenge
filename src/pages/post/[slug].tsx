@@ -32,7 +32,7 @@ interface PostProps {
 
 export default function Post({ post }: PostProps) {
   const readingTime = post.data.content.reduce((count, section) => {
-    const heading = RichText.asText(section.heading).split(' ').length;
+    const heading = section.heading.split(' ').length;
     const text = section.body
       .reduce((newText, { text }) => {
         newText = newText.concat(text);
@@ -46,25 +46,25 @@ export default function Post({ post }: PostProps) {
   return (
     <div className={styles.post}>
       <img src={post.data.banner.url} alt="post banner" />
-      <h1>{post.data.title}</h1>
-      <div className={styles.info}>
-        <time>
-          <FiCalendar /> {post.first_publication_date}
-        </time>
-        <span>
-          <FiUser />
-          {post.data.author}
-        </span>
-        <span>
-          <FiClock />
-          {Math.ceil(readingTime / 200)} min
-        </span>
-      </div>
       <article className={styles.content}>
+        <h1>{post.data.title}</h1>
+        <div className={styles.info}>
+          <time>
+            <FiCalendar /> {post.first_publication_date}
+          </time>
+          <span>
+            <FiUser />
+            {post.data.author}
+          </span>
+          <span>
+            <FiClock />
+            {Math.ceil(readingTime / 200)} min
+          </span>
+        </div>
         {post.data.content.map(section => {
           return (
             <div>
-              <h2>{RichText.asText(section.heading)}</h2>
+              <h2>{section.heading}</h2>
               <div
                 dangerouslySetInnerHTML={{
                   __html: RichText.asHtml(section.body),
