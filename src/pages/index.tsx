@@ -4,6 +4,7 @@ import { GetStaticProps } from 'next';
 import Head from 'next/head';
 import Link from 'next/link';
 import { RichText } from 'prismic-dom';
+import { useState } from 'react';
 import { FiCalendar, FiUser } from 'react-icons/fi';
 import Header from '../components/Header';
 
@@ -32,13 +33,40 @@ interface HomeProps {
 }
 
 export default function Home({postsPagination}: HomeProps) {
+  const [paginatedPost, setPaginatedPost] = useState<PostPagination>(postsPagination);
+
+  // console.log(postsPagination.next_page)
+
+  function nextPageFetch(e){
+    e.preventDefault()
+    fetch(postsPagination.next_page)
+    .then(res => res.json())
+    .then(res => {
+      const posts = res.results.map(post => {
+        return {
+          uid: post.uid,
+          first_publication_date: format(new Date(post.first_publication_date), 'PP', {
+            locale: ptBR
+          }),
+          data: {
+            title: post.data.title,
+            subtitle: post.data.subtitle,
+            author: post.data.author
+          }
+        }
+      })
+      setPaginatedPost(paginatedPost => ({next_page: res.next_page, results: [...paginatedPost.results, ...posts]}))
+      console.log(paginatedPost)
+    })
+  }
+
   return (
     <div className={commonStyles.common}>
       <Head>
         <title>Home | spacetraveling</title>
       </Head>
       <main className={styles.content}>
-        {postsPagination.results.map(post => {
+        {paginatedPost.results.map(post => {
           return (
             <div key={post.uid} className={styles.post}>
               <Link href={`post/${post.uid}`}>
@@ -56,7 +84,7 @@ export default function Home({postsPagination}: HomeProps) {
             </div>
           )
         })}
-        {postsPagination.next_page ? <a href="">Carregar mais posts</a> : ''}
+        {paginatedPost.next_page ? <a href="" onClick={(e) => nextPageFetch(e)}>Carregar mais posts</a> : ''}
       </main>
     </div>
   )

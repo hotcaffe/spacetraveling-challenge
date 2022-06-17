@@ -68,7 +68,7 @@ export default function Post({ post }: PostProps) {
           </div>
           {post.data.content.map(section => {
             return (
-              <article key="section.heading">
+              <article key={section.heading}>
                 <h2>{section.heading}</h2>
                 <div
                   dangerouslySetInnerHTML={{
